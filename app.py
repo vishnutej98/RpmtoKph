@@ -47,6 +47,7 @@ else:
         "Total 3rdGear ratio", "2ndGear RPMtoKPH ratio", "3rdGear RPMtoKPH ratio", "Entry Speed at 2nd Gear in KPH",
         "Exit Speed at 2nd Gear in KPH", "Entry Speed at 3rd Gear in KPH", "Exit Speed at 3rd Gear in KPH"
     ]
+
     # Output Result Display Variables.
     i = 0
     j = 0
@@ -65,11 +66,8 @@ else:
         m += 1
 
     #  Making Rows(Top two and bottom four rows) Bold.
-    for b in range(5, 7):
+    for b in list(range(5, 7)) + list(range(17, 22)):
         Sheet[f'C{b}'].font = Font(bold=True)
         Sheet[f'D{b}'].font = Font(bold=True)
-    for b1 in range(17, 22):
-        Sheet[f'C{b1}'].font = Font(bold=True)
-        Sheet[f'D{b1}'].font = Font(bold=True)
     book.save(str(Project_Code) + ".xlsx")
     print(f"Data is saved in Excel file named as {Project_Code}.")
