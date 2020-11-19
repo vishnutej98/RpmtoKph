@@ -3,7 +3,7 @@ from openpyxl.styles import Font
 
 print('''
 Data Sheet of the Vehicle
-please enter the specification for the vehicle
+please enter the required specification for the vehicle
 ''')
 
 book = Workbook()
@@ -14,9 +14,8 @@ if Gear >= 6:
 else:
     print(f"{Gear} Speed Gear Box.")
     Vehicle_name = str(input('Name of the Vehicle: ')).title()
-    Project_Code = input('Project Code: ').upper()
-    PI = 3.142857
-    print(f"The Data is Calculated for {Vehicle_name} / {Project_Code}.")
+    PI = 3.141592
+    print(f"The Data is Calculated for {Vehicle_name}.")
     P = float(input("Primary Gear Ratio: "))  # Primary Transmission Ratio.
     S = float(input("Secondary Gear Ratio: "))  # Secondary Transmission Ratio.
     R = float(input('Wheel Rolling radius in meters: '))  # Dynamic Rolling Radius in meters.
@@ -30,19 +29,19 @@ else:
     R3 = round(P * S * G3, 3)  # Total 3rd Gear Ratio.
     RK2 = round(R2 / Factor, 3)  # 2nd Gear RPM to KPH Ratio.
     RK3 = round(R3 / Factor, 3)  # 3rd Gear RPM to KPH Ratio.
-    ES2 = round(float(((0.75 * PPM) / R2) * Factor))  # Entry Speed at 2nd Gear in KPH.
-    ES3 = round(float(((0.75 * PPM) / R3) * Factor))  # Entry Speed at 3rd Gear in KPH.
-    EXS2 = round(float((PPM / R2) * Factor))  # Exit Speed at 2nd Gear in KPH.
-    EXS3 = round(float((PPM / R3) * Factor))  # Exit Speed at 3rd Gear in KPH.
+    ES2 = round(float(((0.75 * PPM) / R2) * Factor), 2)  # Entry Speed at 2nd Gear in KPH.
+    ES3 = round(float(((0.75 * PPM) / R3) * Factor), 2)  # Entry Speed at 3rd Gear in KPH.
+    EXS2 = round(float((PPM / R2) * Factor), 2)  # Exit Speed at 2nd Gear in KPH.
+    EXS3 = round(float((PPM / R3) * Factor), 2)  # Exit Speed at 3rd Gear in KPH.
 
     print(f"""
-    The {Vehicle_name} with Project code {Project_Code} with {Gear} Gears has the following values.
+    The {Vehicle_name} with {Gear} Gears has the following values has been saved in the file name of {Vehicle_name}.
     """)
     spec_list = [
-        Vehicle_name, Project_Code, Gear, Factor, P, S, R, PPM, G2, G3, RK2, RK3, ES2, EXS2, ES3, EXS3
+        Vehicle_name, Gear, Factor, P, S, R, PPM, G2, G3, RK2, RK3, ES2, EXS2, ES3, EXS3
     ]
     spec_names = [
-        "Vehicle name", "Project Code", "Gear Box", "Factor = (2 * PI * R * 0.06)", "Primary Gear Ratio",
+        "Vehicle name", "Gear Box", "Factor = (2 * PI * R * 0.06)", "Primary Gear Ratio",
         "Secondary Gear Ratio", "Dynamic Rolling Radius in meters", "Max Peak Power RPM", "Total 2ndGear ratio",
         "Total 3rdGear ratio", "2ndGear RPMtoKPH ratio", "3rdGear RPMtoKPH ratio", "Entry Speed at 2nd Gear in KPH",
         "Exit Speed at 2nd Gear in KPH", "Entry Speed at 3rd Gear in KPH", "Exit Speed at 3rd Gear in KPH"
@@ -59,15 +58,16 @@ else:
     # Excel Result Variables.
     n = 0
     m = 0
-    for g in range(5, 21):  # Excel Result loop.
+    for g in range(5, 20):  # Excel Result loop.
         Sheet[f'C{g}'] = f'{spec_names[n]}'
         Sheet[f'D{g}'] = f'{spec_list[m]}'
         n += 1
         m += 1
 
     #  Making Rows(Top two and bottom four rows) Bold.
-    for b in list(range(5, 7)) + list(range(17, 22)):
+    for b in list(range(4, 6)) + list(range(16, 21)):
         Sheet[f'C{b}'].font = Font(bold=True)
         Sheet[f'D{b}'].font = Font(bold=True)
-    book.save(str(Project_Code) + ".xlsx")
-    print(f"Data is saved in Excel file named as {Project_Code}.")
+        Sheet.column_dimensions['C'].width = 22
+    book.save(str(Vehicle_name) + ".xlsx")
+    print(f"Data is saved in Excel file named as {Vehicle_name}.")
