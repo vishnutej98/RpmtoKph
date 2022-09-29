@@ -3,147 +3,117 @@
 # Vehicle Entry speed and calculated Exit speed for the vehicle.
 # From this Calculation based on user requirement the calculation can be stored
 # Files can be saved in .PDF, .xlsx, .txt
-from math import pi  # Ref 1import
-from fpdf import FPDF  # Ref 2import
-from openpyxl import Workbook  # Ref 3import
-from openpyxl.styles import Font  # Ref 4import
+import time
+from fpdf import FPDF
+from openpyxl import Workbook as wb
+from openpyxl.styles import Font
+from calculation import GearRatio, InputData, DataLabel
 
-print('''
-Data Sheet of the Vehicle
-please enter the required specification for the vehicle
-''')
-
-"""
-The following line from ln 6 to ln 15, we are getting user input for the particular variables.
-The values are stored based on the variable units.
-"""
 Vehicle_name = str(input("Enter the Vehicle Name: ")).title()
 Gear = int(input("No. of Gears: "))
+# InputDataDict = {}
+
 if Gear >= 6:
     print("Sorry! this file will calculate only for 4 or 5 speed gear box.")
     pass
+elif Gear <=3:
+  print("Sorry! this file will calculate only for 4 or 5 speed gear box.")
+  pass
 else:
-    Primary = float(input("Primary transmission ratio: "))
-    Secondary = float(input("Secondary transmission ratio: "))
-    Rolling_Radius = float(input("Rolling radius: "))
-    peak_power_rpm = float(input("Peak Power RPM: "))
-    Gear_2 = float(input("2nd Gear ratio: "))
-    Gear_3 = float(input("3rd Gear ratio: "))
-    total_2nd_gear_ratio = round(Primary * Secondary * Gear_2, 3)
-    total_3rd_gear_ratio = round(Primary * Secondary * Gear_3, 3)
+  input_data = list(InputData.Ratio_Input())
+  data_label = DataLabel.Label()
+  # print(dl)
+  InputDataDict = {}
+  for key in data_label:
+    for value in input_data:
+      InputDataDict[key] = value
+      input_data.remove(value)
+      break
 
+  factorial = GearRatio.fact(InputDataDict['Rolling_Radius'], pi=3.147)
+  # print(factorial)
 
-    def fact(pi, rolling_radius):  # Ref 1import
-        factor = round(2 * pi * rolling_radius * 0.06, 3)
-        return factor
+  #2nd and 3rd Gear Ratio calculation
+  RTK_2ndGearRatio = GearRatio.RPM_to_KPH_ratio_2nd_Gear(InputDataDict['total_2nd_gear_ratio'], factorial)
+  RTK_3rdGearRatio = GearRatio.RPM_to_KPH_ratio_3rd_Gear(InputDataDict['total_3rd_gear_ratio'], factorial)
+  print(RTK_2ndGearRatio)
+  print(RTK_3rdGearRatio)
 
+  #Entry Speed calculations
+  EntrySpeed_2ndGear = GearRatio.Entry_Speed_2nd_Gear(InputDataDict['peak_power_rpm'],InputDataDict['total_2nd_gear_ratio'],factorial)
+  print(EntrySpeed_2ndGear)
 
-    fact = fact(pi, Rolling_Radius)
+  EntrySpeed_3rdGear = GearRatio.Entry_Speed_3rd_Gear(InputDataDict['peak_power_rpm'],InputDataDict['total_3rd_gear_ratio'],factorial)
+  print(EntrySpeed_3rdGear)
 
+  ExitSpeed_2ndGear = GearRatio.Exit_Speed_2nd_Gear(InputDataDict['peak_power_rpm'],InputDataDict['total_2nd_gear_ratio'],factorial)
+  print(f'Exit Speed for 2nd gear: {ExitSpeed_2ndGear}')
 
-    class calculation():
-        @staticmethod
-        def RPM_to_KPH_ratio_2nd_Gear(total_2nd_gear_ratio, fact):
-            RPM_to_KPH_ratio_2nd_Gear = round(total_2nd_gear_ratio / fact, 3)
-            return RPM_to_KPH_ratio_2nd_Gear
+  ExitSpeed_3rdGear = GearRatio.Exit_Speed_3rd_Gear(InputDataDict['peak_power_rpm'],InputDataDict['total_3rd_gear_ratio'],factorial)
+  print(f'Exit Speed for 3rd gear: {ExitSpeed_3rdGear}')
 
-        @staticmethod
-        def RPM_to_KPH_ratio_3rd_Gear(total_3rd_gear_ratio, fact):
-            RPM_to_KPH_ratio_3rd_Gear = round(total_3rd_gear_ratio / fact, 3)
-            return RPM_to_KPH_ratio_3rd_Gear
+  #Data_Label and Data collection for the results
+  Spec_Label = ['Vehicle_name', 'Gear Box', 'Factor = (2 * PI * R * 0.06)', 'Primary Transmission Ratio', 'Secondary Transmission ratio', 'Dynamic Rolling Radius in m', 'Max Peak Power RPM', 'total_2nd_gear_ratio', 'total_3rd_gear_ratio', 'RTK_2ndGearRatio', 'RTK_3rdGearRatio', 'EntrySpeed_2ndGear', 'EntrySpeed_3rdGear', 'ExitSpeed_2ndGear', 'ExitSpeed_3rdGear']
 
-        @staticmethod
-        def Entry_Speed_2nd_Gear(peak_power_rpm, total_2nd_gear_ratio, fact):
-            Entry_Speed_2nd_Gear = round(float(((0.75 * peak_power_rpm) / total_2nd_gear_ratio) * fact), 2)
-            return Entry_Speed_2nd_Gear
+  Spec_List = [Vehicle_name,Gear,factorial,InputDataDict['primary_ratio'], InputDataDict['secondary_ratio'], InputDataDict['Rolling_Radius'], InputDataDict['peak_power_rpm'], InputDataDict['total_2nd_gear_ratio'], InputDataDict['total_3rd_gear_ratio'], RTK_2ndGearRatio, RTK_3rdGearRatio, EntrySpeed_2ndGear, EntrySpeed_3rdGear, ExitSpeed_2ndGear, ExitSpeed_3rdGear]
 
-        @staticmethod
-        def Entry_Speed_3rd_Gear(peak_power_rpm, Total_3rd_Gear_ratio, fact):
-            Entry_Speed_3rd_Gear = round(float(((0.75 * peak_power_rpm) / Total_3rd_Gear_ratio) * fact), 2)
-            return Entry_Speed_3rd_Gear
+  time.sleep(1)
+  print('''
+  Loading........
+  ''')
+  print(f"The data will be calculated for {Vehicle_name}.")
+  time.sleep(1)
+  print("""
+      Please select the option below to save the data in a file:
+      
+          1. PDF(.pdf)
+          2. Excel(.xlsx)
+          3. Text(.txt) under construction
+      """)
+  user_input = int(input('Enter numerical value only: '))
+  time.sleep(2)
 
-        @staticmethod
-        def Exit_Speed_2nd_Gear(peak_power_rpm, Total_2nd_Gear_ratio, fact):
-            Exit_Speed_2nd_Gear = round(float((peak_power_rpm / Total_2nd_Gear_ratio) * fact), 2)
-            return Exit_Speed_2nd_Gear
+  if user_input == 1:
+          file = open("data.txt", "w")
+          for i in range(0, 7):
+              file.write(f"{Spec_Label[i]} : {Spec_List[i]}\n")
 
-        @staticmethod
-        def Exit_Speed_3rd_Gear(peak_power_rpm, Total_3rd_Gear_ratio, fact):
-            Exit_Speed_3rd_Gear = round(float((peak_power_rpm / Total_3rd_Gear_ratio) * fact), 2)
-            return Exit_Speed_3rd_Gear
+          file.write("\n")
+          file.write("\n")
 
+          for j in range(7, 11):
+              file.write(f"{Spec_Label[j]} : {Spec_List[j]}\n")
 
-    spec_name = [
-        "Vehicle name", "Gear Box", "Factor = (2 * PI * R * 0.06)", "Primary Gear Ratio",
-        "Secondary Gear Ratio", "Dynamic Rolling Radius in meters", "Max Peak Power RPM", "Total 2ndGear ratio",
-        "Total 3rdGear ratio", "2ndGear RPMtoKPH ratio", "3rdGear RPMtoKPH ratio", "Entry Speed at 2nd Gear in KPH",
-        "Exit Speed at 2nd Gear in KPH", "Entry Speed at 3rd Gear in KPH", "Exit Speed at 3rd Gear in KPH"
-    ]
-    spec_list = [
-        Vehicle_name, Gear, fact, Primary, Secondary, Rolling_Radius, peak_power_rpm, total_2nd_gear_ratio,
-        total_3rd_gear_ratio,
-        calculation.RPM_to_KPH_ratio_2nd_Gear(total_2nd_gear_ratio, fact),
-        calculation.RPM_to_KPH_ratio_3rd_Gear(total_3rd_gear_ratio, fact),
-        calculation.Entry_Speed_2nd_Gear(peak_power_rpm, total_2nd_gear_ratio, fact),
-        calculation.Exit_Speed_2nd_Gear(peak_power_rpm, total_2nd_gear_ratio, fact),
-        calculation.Entry_Speed_3rd_Gear(peak_power_rpm, total_3rd_gear_ratio, fact),
-        calculation.Exit_Speed_3rd_Gear(peak_power_rpm, total_3rd_gear_ratio, fact)
+          file.write("\n")
+          file.write("\n")
 
-    ]
-    print(f"The data will be calculated for {Vehicle_name}.")
-    print("""
-    Please select the option below to save the data in a file:
+          for k in range(11, 15):
+              file.write(f"{Spec_Label[k]} : {Spec_List[k]}\n")
+          file.close()
 
-        1. PDF(.pdf)
-        2. Excel(.xlsx)
-        3. Text(.txt)
-    """)
-
-    user_input = int(input("Enter numerical value only: "))
-
-    if user_input == 1:
-        file = open("data.txt", "w")
-        for i in range(0, 7):
-            file.write(f"{spec_name[i]} : {spec_list[i]}\n")
-
-        file.write("\n")
-        file.write("\n")
-
-        for j in range(7, 11):
-            file.write(f"{spec_name[j]} : {spec_list[j]}\n")
-
-        file.write("\n")
-        file.write("\n")
-
-        for k in range(11, 15):
-            file.write(f"{spec_name[k]} : {spec_list[k]}\n")
-        file.close()
-
-        # Ref 2import
-        # from fpdf import FPDF
-
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Times", size=14)
-        read_file = open("data.txt", "r")
-        for x in read_file:
+          pdf = FPDF()
+          pdf.add_page()
+          pdf.set_font("Times", size=14)
+          read_file = open("data.txt", "r")
+          for x in read_file:
             pdf.cell(200, 10, txt=x, ln=1, align='L')
-        pdf.output(f"{Vehicle_name}.pdf")
-        print(f"Data is saved in PDF file named as {Vehicle_name}.")
+          pdf.output(f"{Vehicle_name}.pdf")
+          print(f"Data is saved in PDF file named as {Vehicle_name}.pdf")
 
-    elif user_input == 2:
-        # Ref 3import
+
+  elif user_input == 2:
+    # Ref 3import
         # from openpyxl import Workbook
         # Ref 4import
         # from openpyxl.styles import Font
 
-        book = Workbook()
+        book = wb()
         Sheet = book.active
         n = 0
         m = 0
         for g in range(5, 20):  # Excel Result loop.
-            Sheet[f'C{g}'] = f'{spec_name[n]}'
-            Sheet[f'D{g}'] = f'{spec_list[m]}'
+            Sheet[f'C{g}'] = f'{Spec_Label[n]}'
+            Sheet[f'D{g}'] = f'{Spec_List[m]}'
             n += 1
             m += 1
 
@@ -153,37 +123,7 @@ else:
             Sheet[f'D{b}'].font = Font(bold=True)
             Sheet.column_dimensions['C'].width = 27.33
         book.save(str(Vehicle_name) + ".xlsx")
-        print(f"Data is saved in Excel file named as {Vehicle_name}.")
+        print(f"Data is saved in Excel file named as {Vehicle_name}.xlsx")
 
-    elif user_input == 3:
-        file = open(f"{Vehicle_name}.txt", "w")
-        for i in range(0, 7):
-            file.write(f"{spec_name[i]}: {spec_list[i]}\n")
-
-        file.write("\n")
-        file.write("\n")
-
-        for j in range(7, 11):
-            file.write(f"{spec_name[j]}: {spec_list[j]}\n")
-
-        file.write("\n")
-        file.write("\n")
-
-        for k in range(11, 15):
-            file.write(f"{spec_name[k]}: {spec_list[k]}\n")
-        file.close()
-        print(f"Data is saved in Text file named as {Vehicle_name}.")
-    else:
-        print('Input Error!')
-        print('Enter valid input.')
-        print('The output has not been saved in a file.')
-
-    print("Entry 2nd gear: {}".format(calculation.Entry_Speed_2nd_Gear(peak_power_rpm, total_2nd_gear_ratio, fact)))
-    print("Entry 3rd gear: {}".format(calculation.Entry_Speed_3rd_Gear(peak_power_rpm, total_3rd_gear_ratio, fact)))
-    print("Exit speed in 2nd gear: {}".format(
-        calculation.Exit_Speed_2nd_Gear(peak_power_rpm, total_2nd_gear_ratio, fact)))
-    print("Exit speed in 3rd gear: {}".format(
-        calculation.Exit_Speed_3rd_Gear(peak_power_rpm, total_3rd_gear_ratio, fact)))
-
-temp = input("please press any key to quit!")
-print("Thanks! for using this application.")
+  elif user_input == 3:
+    print('This module is still under construction!!')
